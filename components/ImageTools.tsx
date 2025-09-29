@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { generateImageFromText, transformImage, enhanceImage, generateImageVariations } from '../services/geminiService';
 import { Spinner } from './Spinner';
@@ -21,6 +20,7 @@ const imageStyles: { id: ImageStyle, label: string }[] = [ { id: 'none', label: 
 const languages: { id: Language, label: string }[] = [ { id: 'english', label: 'English' }, { id: 'kinyarwanda', label: 'Kinyarwanda' }, ];
 const personas: { id: AIPersona, label: string, premium: SubscriptionTier | 'free' }[] = [ { id: 'none', label: 'Default', premium: 'free' }, { id: 'photographer', label: 'Photographer', premium: 'free' }, { id: 'illustrator', label: 'Illustrator', premium: 'silver' }, { id: 'concept-artist', label: 'Concept Artist', premium: 'silver' }, { id: 'wildlife-photographer', label: 'Wildlife Photographer', premium: 'golden' }, { id: 'sci-fi-artist', label: 'Sci-Fi Artist', premium: 'golden' }, { id: 'food-photographer', label: 'Food Photographer', premium: 'diamond' }, { id: 'architectural-designer', label: 'Architectural Designer', premium: 'diamond' } ];
 const intensities: { id: Intensity, label: string }[] = [{id: 'subtle', label: 'Subtle'}, {id: 'balanced', label: 'Balanced'}, {id: 'strong', label: 'Strong'}];
+const batchSizes: (1|2|3|4)[] = [1, 2, 3, 4];
 
 const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
   return new Promise((resolve, reject) => {
@@ -73,9 +73,12 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [seed, setSeed] = useState<string>('');
   const [styleIntensity, setStyleIntensity] = useState<Intensity>('balanced');
+  const [negativeIntensity, setNegativeIntensity] = useState<Intensity>('balanced');
+  const [batchSize, setBatchSize] = useState<1|2|3|4>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [variations, setVariations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -146,22 +149,25 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
       return;
     }
 
-    setIsLoading(true); setError(null); setGeneratedImage(null); setVariations([]);
+    setIsLoading(true); setError(null); setGeneratedImages([]); setSelectedImage(null); setVariations([]);
 
-    const currentSettings: GenerationSettings = { prompts: validPrompts, negativePrompt, style, language, persona, aspectRatio, seed: seed ? parseInt(seed, 10) : undefined, styleIntensity };
+    const currentSettings: GenerationSettings = { prompts: validPrompts, negativePrompt, style, language, persona, aspectRatio, seed: seed ? parseInt(seed, 10) : undefined, styleIntensity, negativeIntensity, batchSize };
     setLastSettings(currentSettings);
     addPromptToHistory(validPrompts.join('; '));
 
     try {
-      let result: string;
       if (mode === 'image-transform' && imageFile) {
         const image = await fileToBase64(imageFile);
-        result = await transformImage(validPrompts[0], image);
+        const result = await transformImage(validPrompts[0], image);
+        setGeneratedImages([result]);
+        setSelectedImage(result);
+        onSaveToLibrary({ type: 'IMAGE', src: result, settings: currentSettings });
       } else {
-        result = await generateImageFromText(validPrompts, aspectRatio, style, negativePrompt, language, persona, styleIntensity, currentSettings.seed);
+        const results = await generateImageFromText(validPrompts, aspectRatio, style, negativePrompt, language, persona, styleIntensity, negativeIntensity, batchSize, currentSettings.seed);
+        setGeneratedImages(results);
+        setSelectedImage(results[0]);
+        onSaveToLibrary({ type: 'IMAGE', src: results[0], settings: currentSettings, variations: results.slice(1) });
       }
-      setGeneratedImage(result);
-      onSaveToLibrary({ type: 'IMAGE', src: result, settings: currentSettings });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
@@ -169,16 +175,17 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
     } finally {
       setIsLoading(false);
     }
-  }, [prompts, negativePrompt, style, imageFile, mode, aspectRatio, language, persona, seed, styleIntensity, onSaveToLibrary, setToast, addPromptToHistory]);
+  }, [prompts, negativePrompt, style, imageFile, mode, aspectRatio, language, persona, seed, styleIntensity, negativeIntensity, batchSize, onSaveToLibrary, setToast, addPromptToHistory]);
   
   const handleEnhance = async () => {
-    if (!generatedImage) return;
+    if (!selectedImage) return;
     handlePremiumFeature('diamond', async () => {
         setIsEnhancing(true); setError(null);
         try {
-            const base64Data = generatedImage.split(',')[1];
+            const base64Data = selectedImage.split(',')[1];
             const result = await enhanceImage({ data: base64Data, mimeType: 'image/png'});
-            setGeneratedImage(result);
+            setSelectedImage(result);
+            setGeneratedImages([result]);
             setVariations([]);
             onSaveToLibrary({ type: 'IMAGE', src: result, settings: { ...lastSettings!, prompts: [`${lastSettings?.prompts.join('; ')} (Enhanced)`] } });
             setToast('Image enhanced successfully!', 'success');
@@ -193,14 +200,15 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   };
 
   const handleVariations = async () => {
-    if (!generatedImage || !lastSettings) return;
+    if (!selectedImage || !lastSettings) return;
     handlePremiumFeature('golden', async () => {
         setIsGeneratingVariations(true); setError(null);
         try {
-            const base64Data = generatedImage.split(',')[1];
+            const base64Data = selectedImage.split(',')[1];
             const results = await generateImageVariations(lastSettings.prompts.join('; '), { data: base64Data, mimeType: 'image/png'});
             setVariations(results);
-            onSaveToLibrary({ type: 'IMAGE', src: generatedImage, settings: lastSettings, variations: results });
+            setGeneratedImages([selectedImage, ...results]);
+            onSaveToLibrary({ type: 'IMAGE', src: selectedImage, settings: lastSettings, variations: results });
             setToast('Variations generated!', 'success');
         } catch(err) {
             const errorMessage = err instanceof Error ? err.message : 'Variation generation failed.';
@@ -212,7 +220,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   };
 
   const resetForm = () => {
-    setPrompts(['']); setNegativePrompt(''); setStyle('none'); setLanguage('english'); setPersona('none'); clearImage(); setGeneratedImage(null); setError(null); setSeed(''); setStyleIntensity('balanced'); setVariations([]);
+    setPrompts(['']); setNegativePrompt(''); setStyle('none'); setLanguage('english'); setPersona('none'); clearImage(); setGeneratedImages([]); setSelectedImage(null); setError(null); setSeed(''); setStyleIntensity('balanced'); setNegativeIntensity('balanced'); setVariations([]); setBatchSize(1);
   };
 
   const isSubmitDisabled = isLoading || prompts.every(p => p.trim() === '') || (mode === 'image-transform' && !imageFile);
@@ -220,26 +228,22 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   const mainContent = () => {
     if (isLoading) return <div className="text-center"><Spinner size="lg" /><p className="mt-2 text-gray-400">Generating...</p></div>;
     if (isGeneratingVariations) return <div className="text-center"><Spinner size="lg" /><p className="mt-2 text-gray-400">Generating Variations...</p></div>;
-    if (!generatedImage) return <div className="text-center text-gray-600"><PhotoIcon className="mx-auto h-16 w-16" /><p className="mt-2">Your generated image will appear here.</p></div>;
+    if (generatedImages.length === 0) return <div className="text-center text-gray-600"><PhotoIcon className="mx-auto h-16 w-16" /><p className="mt-2">Your generated image will appear here.</p></div>;
     
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex-grow flex items-center justify-center bg-black/30 rounded-lg p-2 min-h-0">
-                {variations.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 aspect-square">
-                        {variations.map((v, i) => (
-                            <img key={i} src={v} alt={`Variation ${i+1}`} className="rounded-lg object-contain cursor-pointer hover:ring-2 ring-red-500 transition" onClick={() => {setGeneratedImage(v); setVariations([]);}}/>
+                {generatedImages.length > 1 ? (
+                    <div className="grid grid-cols-2 gap-2 aspect-square max-h-full max-w-full">
+                        {generatedImages.map((img, i) => (
+                            <img key={i} src={img} alt={`Result ${i+1}`} className={`rounded-lg object-contain cursor-pointer transition ring-2 ${selectedImage === img ? 'ring-red-500' : 'ring-transparent hover:ring-red-500/50'}`} onClick={() => setSelectedImage(img)}/>
                         ))}
                     </div>
                 ) : (
-                    <img src={generatedImage} alt="Generated" className="rounded-lg max-h-full max-w-full object-contain" />
+                    <img src={selectedImage} alt="Generated" className="rounded-lg max-h-full max-w-full object-contain" />
                 )}
             </div>
-            <div className="flex-shrink-0 mt-4">
-                <div className="bg-gray-950/50 p-3 rounded-lg text-sm mb-4">
-                    <p className="font-semibold text-gray-400">Prompt:</p>
-                    <p className="whitespace-pre-wrap break-words text-gray-200">{lastSettings?.prompts.join('; ')}</p>
-                </div>
+            {selectedImage && <div className="flex-shrink-0 mt-4">
                  <div className="flex justify-center space-x-2 sm:space-x-4">
                       <button onClick={handleVariations} disabled={isGeneratingVariations || tierLevels[subscriptionTier] < tierLevels['golden']} className="flex items-center bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600 transition disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed group interactive-glow text-xs sm:text-sm">
                         {isGeneratingVariations ? <Spinner size="sm" /> : <><SparklesIcon className="mr-2 group-disabled:text-gray-500"/> Variations {tierLevels[subscriptionTier] < tierLevels['golden'] && '(Golden)'}</>}
@@ -247,11 +251,11 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                       <button onClick={handleEnhance} disabled={isEnhancing || tierLevels[subscriptionTier] < tierLevels['diamond']} className="flex items-center bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600 transition disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed group interactive-glow text-xs sm:text-sm">
                         {isEnhancing ? <Spinner size="sm" /> : <><ArrowsPointingOutIcon className="mr-2 group-disabled:text-gray-500"/> AI Enhance {tierLevels[subscriptionTier] < tierLevels['diamond'] && '(Diamond)'}</>}
                       </button>
-                      <a href={generatedImage} download="generated-image.png" className="flex items-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition interactive-glow-button text-xs sm:text-sm">
+                      <a href={selectedImage} download="generated-image.png" className="flex items-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition interactive-glow-button text-xs sm:text-sm">
                         <ArrowDownTrayIcon className="mr-2"/> Download
                       </a>
                   </div>
-            </div>
+            </div>}
         </div>
     );
   };
@@ -318,12 +322,22 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                 <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center justify-between w-full text-sm font-medium text-gray-300"><span>Advanced Settings</span>{showAdvanced ? <ChevronUpIcon /> : <ChevronDownIcon />}</button>
                 {showAdvanced && (
                   <div className="mt-4 space-y-4 p-4 bg-gray-950/70 rounded-lg">
-                     <div>
-                         <Tooltip text="Choose the output dimensions for your image. Cinematic ratios are a premium feature.">
-                             <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Aspect Ratio <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
-                         </Tooltip>
-                        <div className="grid grid-cols-5 gap-2">
-                            {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <Tooltip text="Generate multiple images from one prompt.">
+                                 <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Batch Size (Diamond ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
+                            </Tooltip>
+                            <div className="grid grid-cols-4 gap-2">
+                                {batchSizes.map(size => ( <button key={size} type="button" onClick={() => handlePremiumFeature('diamond', () => setBatchSize(size))} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${batchSize === size ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{size}</button>))}
+                            </div>
+                        </div>
+                        <div>
+                            <Tooltip text="Choose the output dimensions for your image. Cinematic ratios are a premium feature.">
+                                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Aspect Ratio <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
+                            </Tooltip>
+                            <div className="grid grid-cols-3 gap-2">
+                                {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
+                            </div>
                         </div>
                     </div>
                      <div>
@@ -359,6 +373,12 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                     <div>
                       <label htmlFor="negative-prompt" className="block text-sm font-medium text-gray-300 mb-2">Negative Prompt</label>
                       <textarea id="negative-prompt" rows={2} value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., blurry, low quality, text, watermark" className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" />
+                       <Tooltip text="Control how strongly the AI should avoid the negative prompt concepts.">
+                          <label htmlFor="negative-intensity" className="block text-sm font-medium text-gray-300 my-2 flex items-center">Negative Intensity (Diamond ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
+                       </Tooltip>
+                      <div className="grid grid-cols-3 gap-2">
+                          {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('diamond', () => setNegativeIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${negativeIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{i.label}</button>)}
+                      </div>
                     </div>
                     <div>
                         <Tooltip text="Use the same number to get consistent results for the same prompt, perfect for creating characters.">

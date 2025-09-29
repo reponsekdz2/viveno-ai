@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Modality } from "@google/genai";
-import type { ImageStyle, VideoStyle, VideoDuration, CameraMovement, VideoQuality, Language, VideoFraming, AIPersona, AspectRatio, VideoFPS, Intensity, SoundFXStyle, AudioMood } from '../types';
+import type { ImageStyle, VideoStyle, VideoDuration, CameraMovement, VideoQuality, Language, VideoFraming, AIPersona, AspectRatio, VideoFPS, Intensity, SoundFXStyle, AudioMood, AudioEnhancementMode } from '../types';
 
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set");
@@ -22,15 +21,15 @@ const personaInstructions: Record<AIPersona, string> = {
 };
 
 const intensityMap: Record<Intensity, string> = {
-    'subtle': 'with a subtle hint of the specified style.',
-    'balanced': 'with a balanced and clear representation of the specified style.',
-    'strong': 'with an extremely strong, dominant, and stylized representation of the specified style.'
+    'subtle': 'a subtle hint of',
+    'balanced': 'a balanced and clear representation of',
+    'strong': 'an extremely strong, dominant, and stylized representation of'
 }
 
-const constructImagePrompt = (prompts: string[], style: string, negativePrompt: string, language: Language, persona: AIPersona, styleIntensity: Intensity): string => {
+const constructImagePrompt = (prompts: string[], style: string, negativePrompt: string, language: Language, persona: AIPersona, styleIntensity: Intensity, negativeIntensity: Intensity): string => {
     const languageInstruction = language === 'kinyarwanda' ? 'The user is providing the prompt in Kinyarwanda; interpret it accordingly.' : '';
-    const styleInstruction = style !== 'none' ? `Style: ${style.replace('-', ' ')}. Style Intensity: ${intensityMap[styleIntensity]}` : '';
-    const negativeInstruction = negativePrompt ? `Avoid the following: ${negativePrompt}.` : '';
+    const styleInstruction = style !== 'none' ? `Style: ${style.replace('-', ' ')}. Style Intensity: ${intensityMap[styleIntensity]} this style.` : '';
+    const negativeInstruction = negativePrompt ? `Crucially, avoid the following elements with ${intensityMap[negativeIntensity]} emphasis: ${negativePrompt}.` : '';
     
     let mainPrompt: string;
     if (prompts.length > 1) {
@@ -41,7 +40,7 @@ const constructImagePrompt = (prompts: string[], style: string, negativePrompt: 
     }
     
     const finalPrompt = `${personaInstructions[persona]} ${mainPrompt} ${languageInstruction} ${styleInstruction} ${negativeInstruction}`;
-    return finalPrompt.trim();
+    return finalPrompt.trim().replace(/\s+/g, ' ');
 };
 
 const constructVideoPrompt = (prompt: string, style: VideoStyle, negativePrompt: string, duration: VideoDuration, cameraMovement: CameraMovement, quality: VideoQuality, language: Language, framing: VideoFraming, persona: AIPersona, loop: boolean, aspectRatio: AspectRatio, fps: VideoFPS, motionIntensity: Intensity, audioMood: AudioMood): string => {
@@ -87,14 +86,14 @@ const constructVideoPrompt = (prompt: string, style: VideoStyle, negativePrompt:
     return finalPrompt.replace(/\s+/g, ' ').trim();
 }
 
-export const generateImageFromText = async (prompts: string[], aspectRatio: AspectRatio = '1:1', style: ImageStyle = 'none', negativePrompt: string = '', language: Language = 'english', persona: AIPersona = 'none', styleIntensity: Intensity = 'balanced', seed?: number): Promise<string> => {
-    const finalPrompt = constructImagePrompt(prompts, style, negativePrompt, language, persona, styleIntensity);
+export const generateImageFromText = async (prompts: string[], aspectRatio: AspectRatio = '1:1', style: ImageStyle = 'none', negativePrompt: string = '', language: Language = 'english', persona: AIPersona = 'none', styleIntensity: Intensity = 'balanced', negativeIntensity: Intensity = 'balanced', batchSize: 1 | 2 | 3 | 4 = 1, seed?: number): Promise<string[]> => {
+    const finalPrompt = constructImagePrompt(prompts, style, negativePrompt, language, persona, styleIntensity, negativeIntensity);
     
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: finalPrompt,
         config: {
-            numberOfImages: 1,
+            numberOfImages: batchSize,
             outputMimeType: 'image/png',
             aspectRatio: aspectRatio,
             seed: seed
@@ -102,8 +101,7 @@ export const generateImageFromText = async (prompts: string[], aspectRatio: Aspe
     });
 
     if (response.generatedImages && response.generatedImages.length > 0) {
-        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
-        return `data:image/png;base64,${base64ImageBytes}`;
+        return response.generatedImages.map(img => `data:image/png;base64,${img.image.imageBytes}`);
     }
     throw new Error("Image generation failed or returned no images.");
 };
@@ -208,12 +206,13 @@ export const enhanceVideo = async (originalPrompt: string, settings: any): Promi
     return generateVideoInternal(finalPrompt);
 };
 
-export const transcribeAudioFromFile = async (file: { data: string; mimeType: string }): Promise<string> => {
+export const transcribeAudioFromFile = async (file: { data: string; mimeType: string }, language: Language): Promise<string> => {
+    const langInstruction = language === 'kinyarwanda' ? 'The user has specified the language is Kinyarwanda.' : '';
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: {
             parts: [
-                { text: "Transcribe the audio from this file with high accuracy, including punctuation." },
+                { text: `Transcribe the audio from this file with high accuracy, including punctuation. ${langInstruction}` },
                 { inlineData: { data: file.data, mimeType: file.mimeType } }
             ]
         }
@@ -236,8 +235,8 @@ export const generateSoundEffect = (prompt: string, fxStyle: SoundFXStyle | Audi
 };
 
 // Mock audio enhancement
-export const enhanceAudio = (file: { data: string; mimeType: string }): Promise<string> => {
-    console.log("Enhancing audio file:", file.mimeType);
+export const enhanceAudio = (file: { data: string; mimeType: string }, mode: AudioEnhancementMode): Promise<string> => {
+    console.log(`Enhancing audio file with mode: ${mode}`, file.mimeType);
     return new Promise(resolve => {
         setTimeout(() => {
              const placeholderAudio = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';

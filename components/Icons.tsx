@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const ImageIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
@@ -220,5 +219,23 @@ export const QuestionMarkCircleIcon: React.FC<{className?: string}> = ({ classNa
 export const WandSparklesIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.998 15.998 0 011.622-3.385m5.043.025a2.25 2.25 0 012.4-2.245 4.5 4.5 0 00-8.4 2.245c0 .399.078.78.22 1.128zm0 0a15.998 15.998 0 00-3.388 1.62m5.043-.025a15.998 15.998 0 01-1.622 3.385m1.622-3.385a3 3 0 005.78 1.128 2.25 2.25 0 012.4 2.245 4.5 4.5 0 00-8.4-2.245c0-.399.078-.78-.22-1.128z" />
+    </svg>
+);
+
+export const AdjustmentsHorizontalIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+    </svg>
+);
+
+export const ChatBubbleBottomCenterTextIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.056 3 12c0 2.22.894 4.232 2.362 5.766l.002.002.16.161.213.192c.664.6 1.487.97 2.366.97h.308c.878 0 1.702-.37 2.365-.97l.213-.192.16-.161.002-.002A8.91 8.91 0 0012 20.25zM12 8.25a.75.75 0 01.75.75v.008a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zM12 11.25a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0v-3a.75.75 0 01.75-.75z" />
+    </svg>
+);
+
+export const SoundWaveIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h-.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125H8.25m.375 0v-.625c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125v.625m-3.375 0V15c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125V11.25m-3.375 0h.008v.008h-.008V11.25zm5.625 0h-.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h.375m.375 0v-.625c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125v.625m-3.375 0V15c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125V11.25m-3.375 0h.008v.008h-.008V11.25z" />
     </svg>
 );

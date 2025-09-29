@@ -1,8 +1,8 @@
-
 export type GenerationMode = 'IMAGE' | 'VIDEO' | 'AUDIO' | 'LIBRARY' | 'PROFILE' | 'SETTINGS' | 'PREMIUM';
 export type AudioToolMode = 'speech-to-text' | 'text-to-speech' | 'sound-fx' | 'audio-enhancement';
 export type SpeechToTextMode = 'live' | 'file';
 export type RecordingStatus = 'idle' | 'connecting' | 'recording' | 'stopping';
+export type AudioEnhancementMode = 'noise-reduction' | 'speech-enhancement' | 'sound-isolation';
 
 export interface SidebarLink {
   id: GenerationMode;
@@ -47,6 +47,8 @@ export interface GenerationSettings {
     motionIntensity?: Intensity;
     fxStyle?: SoundFXStyle;
     audioMood?: AudioMood;
+    batchSize?: 1 | 2 | 3 | 4;
+    negativeIntensity?: Intensity;
 }
 
 export interface LibraryItem {

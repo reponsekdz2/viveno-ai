@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleGenAI, Modality, Blob as GenAIBlob, LiveServerMessage } from '@google/genai';
-import { MicrophoneIcon, SpeakerWaveIcon, StopCircleIcon, DocumentDuplicateIcon, XCircleIcon, UploadCloudIcon, PlayCircleIcon, ArrowPathIcon, ArrowDownTrayIcon, CheckIcon, SparklesIcon, WandSparklesIcon } from './Icons';
+import { MicrophoneIcon, SpeakerWaveIcon, StopCircleIcon, DocumentDuplicateIcon, XCircleIcon, UploadCloudIcon, PlayCircleIcon, ArrowDownTrayIcon, CheckIcon, SparklesIcon, WandSparklesIcon, LanguageIcon, AdjustmentsHorizontalIcon, ChatBubbleBottomCenterTextIcon, SoundWaveIcon } from './Icons';
 import { transcribeAudioFromFile, generateSoundEffect, enhanceAudio } from '../services/geminiService';
-import type { Toast, SubscriptionTier, AudioToolMode, SpeechToTextMode, RecordingStatus, SoundFXStyle } from '../types';
+import type { Toast, SubscriptionTier, AudioToolMode, SpeechToTextMode, RecordingStatus, SoundFXStyle, Language, AudioEnhancementMode } from '../types';
 import { Spinner } from './Spinner';
 
 const encode = (bytes: Uint8Array) => {
@@ -40,6 +39,12 @@ interface AudioToolsProps {
 }
 
 const fxStyles: {id: SoundFXStyle, label: string}[] = [ {id: 'none', label: 'Default'}, {id: 'realistic', label: 'Realistic'}, {id: 'cartoon', label: 'Cartoon'}, {id: 'cinematic', label: 'Cinematic'}];
+const enhancementModes: {id: AudioEnhancementMode, label: string, premium: SubscriptionTier, icon: React.ReactNode, description: string}[] = [
+    { id: 'noise-reduction', label: 'Noise Reduction', premium: 'silver', icon: <AdjustmentsHorizontalIcon />, description: 'Remove background noise and hum.'},
+    { id: 'speech-enhancement', label: 'Speech Enhancement', premium: 'golden', icon: <ChatBubbleBottomCenterTextIcon />, description: 'Isolate and clarify vocals.'},
+    { id: 'sound-isolation', label: 'Sound Isolation', premium: 'diamond', icon: <SoundWaveIcon />, description: 'Separate distinct audio tracks.'},
+];
+
 
 export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTier, promptUpgrade }) => {
     const [mode, setMode] = useState<AudioToolMode>('speech-to-text');
@@ -48,6 +53,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
     const [transcript, setTranscript] = useState('');
     const [finalTranscript, setFinalTranscript] = useState('');
     const [sttError, setSttError] = useState<string | null>(null);
+    const [sttLanguage, setSttLanguage] = useState<Language>('english');
     const sessionPromiseRef = useRef<Promise<any> | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -75,6 +81,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
     // Audio Enhancement State
     const [enhancementFile, setEnhancementFile] = useState<File|null>(null);
     const [enhancementFilePreview, setEnhancementFilePreview] = useState<string|null>(null);
+    const [enhancementMode, setEnhancementMode] = useState<AudioEnhancementMode>('noise-reduction');
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [enhancedAudio, setEnhancedAudio] = useState<string|null>(null);
     const [enhancementError, setEnhancementError] = useState<string|null>(null);
@@ -84,7 +91,8 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
             const voices = window.speechSynthesis.getVoices();
             if (voices.length > 0) {
                 setAvailableVoices(voices);
-                setSelectedVoiceURI(voices[0]?.voiceURI || '');
+                const defaultVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                setSelectedVoiceURI(defaultVoice?.voiceURI || '');
             }
         };
         loadVoices();
@@ -125,6 +133,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
             if (!process.env.API_KEY) throw new Error("API Key not found.");
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const langInstruction = sttLanguage === 'kinyarwanda' ? 'The user will be speaking in Kinyarwanda. Transcribe accurately.' : 'The user will be speaking in English. Transcribe accurately.';
             sessionPromiseRef.current = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 callbacks: {
@@ -145,10 +154,10 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                         if (msg.serverContent?.inputTranscription) setTranscript(prev => prev + msg.serverContent.inputTranscription.text);
                         if (msg.serverContent?.turnComplete) { setFinalTranscript(prev => (prev + transcript + ' ').trim()); setTranscript(''); }
                     },
-                    onerror: (e: ErrorEvent) => { console.error('Session error:', e); setSttError('Transcription service error.'); stopRecording(); },
-                    onclose: (e: CloseEvent) => { setStatus('idle'); },
+                    onerror: (e: any) => { console.error('Session error:', e); setSttError('Transcription service error.'); stopRecording(); },
+                    onclose: (e: any) => { setStatus('idle'); },
                 },
-                config: { inputAudioTranscription: {}, responseModalities: [Modality.AUDIO] }
+                config: { inputAudioTranscription: {}, responseModalities: [Modality.AUDIO], systemInstruction: `You are a transcription expert. ${langInstruction}` }
             });
         } catch (err) {
             const msg = err instanceof Error ? err.message : "Could not start. Check microphone permissions.";
@@ -178,7 +187,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
         if (!file || !file.type.match('audio.*|video.*')) { setSttError("Please select a valid audio or video file."); return; }
         setIsTranscribingFile(true); setSttError(null); setFinalTranscript('');
         try {
-            const result = await transcribeAudioFromFile(await fileToBase64(file));
+            const result = await transcribeAudioFromFile(await fileToBase64(file), sttLanguage);
             setFinalTranscript(result);
             setToast("Transcription complete!", "success");
         } catch(err) {
@@ -193,7 +202,10 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
         try {
             const utterance = new SpeechSynthesisUtterance(ttsText);
             const selectedVoice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
-            if (selectedVoice) utterance.voice = selectedVoice;
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang;
+            }
             
             const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({});
             const destination = audioContext.createMediaStreamDestination();
@@ -238,14 +250,15 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
     };
 
     const handleEnhanceAudio = async () => {
-        if (tierLevels[subscriptionTier] < tierLevels['silver']) {
+       const requiredTier = enhancementModes.find(m => m.id === enhancementMode)!.premium;
+        if (tierLevels[subscriptionTier] < tierLevels[requiredTier]) {
             promptUpgrade();
             return;
         }
         if (!enhancementFile) { setEnhancementError("Please upload an audio file."); return; }
         setIsEnhancing(true); setEnhancementError(null); setEnhancedAudio(null);
         try {
-            const result = await enhanceAudio(await fileToBase64(enhancementFile));
+            const result = await enhanceAudio(await fileToBase64(enhancementFile), enhancementMode);
             setEnhancedAudio(result);
             setToast("Audio enhanced successfully!", "success");
         } catch(err) {
@@ -278,6 +291,8 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
       setToast('Transcript copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     }
+    
+    const filteredVoices = (lang: 'en' | 'rw') => availableVoices.filter(v => v.lang.startsWith(lang));
 
     return (
         <div className="max-w-4xl mx-auto flex flex-col h-full">
@@ -294,9 +309,17 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
             <div className="bg-gradient-panel rounded-lg flex-grow border border-[var(--border-color)] overflow-hidden">
                 {mode === 'speech-to-text' ? (
                     <div className="flex flex-col h-full">
-                        <div className="flex bg-black/20 p-1 rounded-t-lg border-b border-[var(--border-color)]">
+                        <div className="flex bg-black/20 p-1 rounded-t-lg border-b border-[var(--border-color)] items-center">
                            <button onClick={() => setSttMode('live')} className={`w-1/2 py-2 text-sm font-semibold transition ${sttMode === 'live' ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>Live Recording</button>
                            <button onClick={() => setSttMode('file')} className={`w-1/2 py-2 text-sm font-semibold transition ${sttMode === 'file' ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>Transcribe File</button>
+                           <div className="w-px h-6 bg-gray-700 mx-2"></div>
+                           <div className="flex items-center space-x-2 px-2">
+                             <LanguageIcon className="w-5 h-5 text-gray-400" />
+                             <select value={sttLanguage} onChange={e => setSttLanguage(e.target.value as Language)} className="bg-transparent text-sm text-gray-300 focus:outline-none">
+                                <option value="english">English</option>
+                                <option value="kinyarwanda">Kinyarwanda</option>
+                             </select>
+                           </div>
                         </div>
                         {sttMode === 'live' && (
                           <div className="flex flex-col h-full">
@@ -348,7 +371,15 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                         <div>
                             <label htmlFor="voice" className="block text-sm font-medium text-gray-300 mb-2">System Voice</label>
                              <select id="voice" value={selectedVoiceURI} onChange={(e) => setSelectedVoiceURI(e.target.value)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
-                                {availableVoices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                                <optgroup label="English">
+                                    {filteredVoices('en').map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                                </optgroup>
+                                <optgroup label="Kinyarwanda">
+                                     {filteredVoices('rw').map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                                </optgroup>
+                                <optgroup label="Other">
+                                    {availableVoices.filter(v => !v.lang.startsWith('en') && !v.lang.startsWith('rw')).map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                                </optgroup>
                             </select>
                         </div>
                         <div className="flex-grow flex flex-col items-center justify-center">
@@ -398,8 +429,8 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                     </div>
                 ) : ( // Audio Enhancement
                     <div className="flex flex-col h-full p-6 space-y-4">
-                        <h3 className="text-xl font-semibold text-white">AI Audio Enhancement <span className="text-sm font-normal text-slate-400">(Silver ✨)</span></h3>
-                        <p className="text-sm text-gray-400">Upload an audio file to remove background noise and enhance speech clarity.</p>
+                        <h3 className="text-xl font-semibold text-white">AI Audio Enhancement</h3>
+                        <p className="text-sm text-gray-400">Upload an audio file to refine sounds, remove background noise, and enhance speech clarity.</p>
                         <div className="flex-grow flex flex-col items-center justify-center">
                             {!enhancementFile && (
                                 <div className={`relative w-full max-w-md flex flex-col justify-center items-center rounded-lg border-2 border-dashed p-8 h-48 transition-all duration-200 ${isDragging ? 'border-red-500 bg-red-900/20' : 'border-gray-700 hover:border-gray-600'}`} onDragOver={(e)=>{e.preventDefault(); setIsDragging(true);}} onDragLeave={()=>{setIsDragging(false);}} onDrop={(e)=>{e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files[0]) handleEnhancementFile(e.dataTransfer.files[0])}}>
@@ -413,6 +444,17 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                                     <div>
                                         <p className="text-sm font-medium text-gray-400 mb-1">Original:</p>
                                         <CustomAudioPlayer src={enhancementFilePreview!} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-gray-300">Enhancement Mode:</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                            {enhancementModes.map(mode => (
+                                                <button key={mode.id} onClick={() => setEnhancementMode(mode.id)} className={`p-3 text-left rounded-lg transition border-2 ${enhancementMode === mode.id ? 'bg-red-900/50 border-red-500' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'}`}>
+                                                    <div className="flex items-center"><span className="mr-2">{mode.icon}</span>{mode.label}</div>
+                                                    <p className="text-xs text-gray-400 mt-1">{mode.description}</p>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                     {enhancedAudio && (
                                         <div>
