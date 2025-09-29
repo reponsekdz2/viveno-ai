@@ -21,6 +21,7 @@ const languages: { id: Language, label: string }[] = [ { id: 'english', label: '
 const personas: { id: AIPersona, label: string, premium: SubscriptionTier | 'free' }[] = [ { id: 'none', label: 'Default', premium: 'free' }, { id: 'photographer', label: 'Photographer', premium: 'free' }, { id: 'illustrator', label: 'Illustrator', premium: 'silver' }, { id: 'concept-artist', label: 'Concept Artist', premium: 'silver' }, { id: 'wildlife-photographer', label: 'Wildlife Photographer', premium: 'golden' }, { id: 'sci-fi-artist', label: 'Sci-Fi Artist', premium: 'golden' }, { id: 'food-photographer', label: 'Food Photographer', premium: 'diamond' }, { id: 'architectural-designer', label: 'Architectural Designer', premium: 'diamond' } ];
 const intensities: { id: Intensity, label: string }[] = [{id: 'subtle', label: 'Subtle'}, {id: 'balanced', label: 'Balanced'}, {id: 'strong', label: 'Strong'}];
 const batchSizes: (1|2|3|4)[] = [1, 2, 3, 4];
+const IMAGE_LOADING_MESSAGES = [ "Contacting the digital muse...", "Mixing colors on the virtual palette...", "Sketching the initial concept...", "Rendering pixels with precision...", "Adding artistic finishing touches...", "Your masterpiece is almost ready..." ];
 
 const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
   return new Promise((resolve, reject) => {
@@ -81,6 +82,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [variations, setVariations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(IMAGE_LOADING_MESSAGES[0]);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isGeneratingVariations, setIsGeneratingVariations] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,19 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   const [showHistory, setShowHistory] = useState(false);
 
   const tierLevels: Record<SubscriptionTier, number> = { free: 0, silver: 1, golden: 2, diamond: 3 };
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isLoading) {
+      interval = setInterval(() => {
+        setLoadingMessage(prev => {
+          const currentIndex = IMAGE_LOADING_MESSAGES.indexOf(prev);
+          return IMAGE_LOADING_MESSAGES[(currentIndex + 1) % IMAGE_LOADING_MESSAGES.length];
+        });
+      }, 2500);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(prompts.join('; '));
@@ -150,6 +165,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
     }
 
     setIsLoading(true); setError(null); setGeneratedImages([]); setSelectedImage(null); setVariations([]);
+    setLoadingMessage(IMAGE_LOADING_MESSAGES[0]);
 
     const currentSettings: GenerationSettings = { prompts: validPrompts, negativePrompt, style, language, persona, aspectRatio, seed: seed ? parseInt(seed, 10) : undefined, styleIntensity, negativeIntensity, batchSize };
     setLastSettings(currentSettings);
@@ -226,7 +242,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
   const isSubmitDisabled = isLoading || prompts.every(p => p.trim() === '') || (mode === 'image-transform' && !imageFile);
 
   const mainContent = () => {
-    if (isLoading) return <div className="text-center"><Spinner size="lg" /><p className="mt-2 text-gray-400">Generating...</p></div>;
+    if (isLoading) return <div className="text-center"><Spinner size="lg" /><p className="mt-4 text-gray-400">{loadingMessage}</p></div>;
     if (isGeneratingVariations) return <div className="text-center"><Spinner size="lg" /><p className="mt-2 text-gray-400">Generating Variations...</p></div>;
     if (generatedImages.length === 0) return <div className="text-center text-gray-600"><PhotoIcon className="mx-auto h-16 w-16" /><p className="mt-2">Your generated image will appear here.</p></div>;
     

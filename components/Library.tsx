@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { LibraryItem, Toast } from '../types';
 import { ImageIcon, FilmIcon, XMarkIcon, ArrowDownTrayIcon, TrashIcon, RectangleStackIcon } from './Icons';
@@ -89,7 +88,7 @@ const LibraryDetailModal: React.FC<{ item: LibraryItem, onClose: () => void, onD
                          )}
                     </div>
                     <div className="flex space-x-2">
-                        <a href={item.src} download={`creative-suite-${item.id}.${item.type === 'IMAGE' ? 'png' : 'mp4'}`} className="flex-1 flex items-center justify-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition interactive-glow-button">
+                        <a href={item.src} download={`olivier-studio-${item.id}.${item.type === 'IMAGE' ? 'png' : 'mp4'}`} className="flex-1 flex items-center justify-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition interactive-glow-button">
                             <ArrowDownTrayIcon className="mr-2" /> Download
                         </a>
                          <button onClick={onDelete} className="flex items-center justify-center bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600 transition">

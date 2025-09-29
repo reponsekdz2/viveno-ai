@@ -11,6 +11,36 @@ const encode = (bytes: Uint8Array) => {
   return btoa(binary);
 };
 
+const decode = (base64: string) => {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
+async function decodeAudioData(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number,
+  numChannels: number,
+): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
+  }
+  return buffer;
+}
+
+
 const createBlobFromAudio = (data: Float32Array): GenAIBlob => {
   const int16 = new Int16Array(data.length);
   for (let i = 0; i < data.length; i++) { int16[i] = data[i] < 0 ? data[i] * 32768 : data[i] * 32767; }
@@ -61,6 +91,9 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
     const analyserRef = useRef<AnalyserNode | null>(null);
     const waveformCanvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number | null>(null);
+    const outputAudioContextRef = useRef<AudioContext | null>(null);
+    const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+    const nextStartTimeRef = useRef<number>(0);
     const [isTranscribingFile, setIsTranscribingFile] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +166,10 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
             if (!process.env.API_KEY) throw new Error("API Key not found.");
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            const OutputAudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            outputAudioContextRef.current = new OutputAudioContext({ sampleRate: 24000 });
+            
             const langInstruction = sttLanguage === 'kinyarwanda' ? 'The user will be speaking in Kinyarwanda. Transcribe accurately.' : 'The user will be speaking in English. Transcribe accurately.';
             sessionPromiseRef.current = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
@@ -150,12 +187,51 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                         scriptProcessorRef.current.connect(audioContextRef.current.destination);
                         setStatus('recording');
                     },
-                    onmessage: (msg: LiveServerMessage) => {
-                        if (msg.serverContent?.inputTranscription) setTranscript(prev => prev + msg.serverContent.inputTranscription.text);
-                        if (msg.serverContent?.turnComplete) { setFinalTranscript(prev => (prev + transcript + ' ').trim()); setTranscript(''); }
+                    onmessage: async (msg: LiveServerMessage) => {
+                        if (msg.serverContent?.inputTranscription) {
+                            setTranscript(prev => prev + msg.serverContent.inputTranscription.text);
+                        }
+                        if (msg.serverContent?.turnComplete) { 
+                            setFinalTranscript(prev => (prev + transcript + ' ').trim()); 
+                            setTranscript(''); 
+                        }
+
+                        const base64EncodedAudioString = msg.serverContent?.modelTurn?.parts[0]?.inlineData.data;
+                        if (base64EncodedAudioString && outputAudioContextRef.current) {
+                            const outputAudioContext = outputAudioContextRef.current;
+                            nextStartTimeRef.current = Math.max(
+                                nextStartTimeRef.current,
+                                outputAudioContext.currentTime,
+                            );
+                            const audioBuffer = await decodeAudioData(
+                                decode(base64EncodedAudioString),
+                                outputAudioContext,
+                                24000,
+                                1,
+                            );
+                            const source = outputAudioContext.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(outputAudioContext.destination);
+                            source.addEventListener('ended', () => {
+                                sourcesRef.current.delete(source);
+                            });
+                    
+                            source.start(nextStartTimeRef.current);
+                            nextStartTimeRef.current = nextStartTimeRef.current + audioBuffer.duration;
+                            sourcesRef.current.add(source);
+                        }
+                    
+                        const interrupted = msg.serverContent?.interrupted;
+                        if (interrupted) {
+                            for (const source of sourcesRef.current.values()) {
+                                source.stop();
+                                sourcesRef.current.delete(source);
+                            }
+                            nextStartTimeRef.current = 0;
+                        }
                     },
-                    onerror: (e: any) => { console.error('Session error:', e); setSttError('Transcription service error.'); stopRecording(); },
-                    onclose: (e: any) => { setStatus('idle'); },
+                    onerror: (e: ErrorEvent) => { console.error('Session error:', e); setSttError('Transcription service error.'); stopRecording(); },
+                    onclose: (e: CloseEvent) => { setStatus('idle'); },
                 },
                 config: { inputAudioTranscription: {}, responseModalities: [Modality.AUDIO], systemInstruction: `You are a transcription expert. ${langInstruction}` }
             });
@@ -173,6 +249,13 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
     const stopRecording = useCallback(async () => {
         setStatus('stopping');
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+
+        for (const source of sourcesRef.current.values()) {
+            source.stop();
+        }
+        sourcesRef.current.clear();
+        nextStartTimeRef.current = 0;
+
         if (sessionPromiseRef.current) {
             try { (await sessionPromiseRef.current).close(); } catch (e) { console.error("Error closing session", e); }
             sessionPromiseRef.current = null;
@@ -180,6 +263,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
         streamRef.current?.getTracks().forEach(track => track.stop());
         scriptProcessorRef.current?.disconnect();
         if (audioContextRef.current?.state !== 'closed') await audioContextRef.current?.close();
+        if (outputAudioContextRef.current?.state !== 'closed') await outputAudioContextRef.current?.close();
         setFinalTranscript(prev => (prev + transcript).trim()); setTranscript(''); setStatus('idle');
     }, [transcript]);
 

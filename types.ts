@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export type GenerationMode = 'IMAGE' | 'VIDEO' | 'AUDIO' | 'LIBRARY' | 'PROFILE' | 'SETTINGS' | 'PREMIUM';
 export type AudioToolMode = 'speech-to-text' | 'text-to-speech' | 'sound-fx' | 'audio-enhancement';
 export type SpeechToTextMode = 'live' | 'file';
@@ -7,7 +9,8 @@ export type AudioEnhancementMode = 'noise-reduction' | 'speech-enhancement' | 's
 export interface SidebarLink {
   id: GenerationMode;
   label: string;
-  icon: React.ReactNode;
+  // Fix: Use ReactNode type from import to resolve 'Cannot find namespace React' error.
+  icon: ReactNode;
 }
 
 export type Language = 'english' | 'kinyarwanda';

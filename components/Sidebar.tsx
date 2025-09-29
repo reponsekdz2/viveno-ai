@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { GenerationMode, SidebarLink } from '../types';
 import { FilmIcon, ImageIcon, UserCircleIcon, Cog6ToothIcon, RectangleStackIcon, SparklesIcon, MusicalNoteIcon, CrownIcon } from './Icons';
@@ -39,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeMode, setActiveMode }) =
     <aside className="w-64 bg-gray-950/70 backdrop-blur-sm p-4 flex flex-col border-r border-[var(--border-color)]">
       <div className="flex items-center mb-8 px-2">
         <SparklesIcon className="w-8 h-8 text-red-500" />
-        <h1 className="ml-3 text-xl font-bold text-white">Creative Suite</h1>
+        <h1 className="ml-3 text-xl font-bold text-white">Olivier Studio</h1>
       </div>
       <nav className="flex-1 flex flex-col justify-between">
         <div>
