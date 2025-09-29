@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Creative Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --glow-color: rgb(239 68 68 / 0.7);
+        --glow-spread: 0px;
+        --gradient-start: rgb(23 23 23 / 0.95);
+        --gradient-end: rgb(17 24 39 / 0.95);
+        --border-color: rgb(55 65 81 / 0.4);
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #000;
+      }
+      .interactive-glow:hover, .interactive-glow:focus-within {
+        --glow-spread: 2px;
+        box-shadow: 0 0 8px 2px var(--glow-color);
+        border-color: var(--glow-color);
+      }
+      .interactive-glow-button:hover, .interactive-glow-button:focus {
+        --glow-spread: 2px;
+        box-shadow: 0 0 10px 3px var(--glow-color);
+      }
+      .bg-gradient-panel {
+        background-image: linear-gradient(145deg, var(--gradient-start), var(--gradient-end));
+      }
+
+      /* Animations */
+      @keyframes toast-in {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes toast-out {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(100%); opacity: 0; }
+      }
+      .toast-in { animation: toast-in 0.3s ease-out forwards; }
+      .toast-out { animation: toast-out 0.3s ease-in forwards; }
+
+      @keyframes modal-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes modal-content-in {
+        from { transform: scale(0.95) translateY(10px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+      }
+      .modal-fade-in { animation: modal-fade-in 0.2s ease-out forwards; }
+      .modal-content-in { animation: modal-content-in 0.2s ease-out forwards; }
+      
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 5px 1px var(--glow-color); }
+        50% { box-shadow: 0 0 12px 3px var(--glow-color); }
+      }
+      .interactive-glow-button:focus {
+        animation: pulse-glow 1.5s infinite ease-in-out;
+      }
+      
+      .premium-card-glow {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(145deg, var(--gradient-start), #1a2233);
+        background-size: 200% 200%;
+        transition: background-position 0.5s ease;
+      }
+      .premium-card-glow:hover {
+        background-position: 100% 100%;
+      }
+      .premium-card-glow::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: conic-gradient(
+          transparent,
+          rgb(239 68 68 / 0.3),
+          transparent 30%
+        );
+        animation: rotate 4s linear infinite;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .premium-card-glow:hover::before {
+        opacity: 1;
+      }
+      @keyframes rotate {
+        100% { transform: rotate(1turn); }
+      }
+
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #1f2937; }
+      ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-black text-gray-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

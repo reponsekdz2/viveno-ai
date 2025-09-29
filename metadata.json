@@ -1,0 +1,7 @@
+{
+  "name": "AI Creative Suite",
+  "description": "An all-in-one application to generate and transform images and videos using powerful AI models. Create visuals from text, transform existing images with prompts, and generate videos from text or images.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
