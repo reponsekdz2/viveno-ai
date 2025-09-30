@@ -315,7 +315,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
               <div className="relative">
                 {prompts.map((p, i) => (
                     <div key={i} className="relative mb-2">
-                        <textarea rows={prompts.length > 1 ? 2 : 5} value={p} onChange={(e) => handlePromptChange(i, e.target.value)} placeholder={mode === 'image-transform' ? "A detailed description of the transformation..." : "A majestic lion on a grassy plain..."} className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition pr-10"/>
+                        <textarea rows={prompts.length > 1 ? 2 : 5} value={p} onChange={(e) => handlePromptChange(i, e.target.value)} placeholder={mode === 'image-transform' ? "A detailed description of the transformation..." : "A majestic lion on a grassy plain..."} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition pr-10 placeholder-gray-500"/>
                         {prompts.length > 1 && <button type="button" onClick={() => removePromptField(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 rounded-full transition"><MinusCircleIcon /></button>}
                     </div>
                 ))}
@@ -344,7 +344,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                                  <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Batch Size (Diamond ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                             </Tooltip>
                             <div className="grid grid-cols-4 gap-2">
-                                {batchSizes.map(size => ( <button key={size} type="button" onClick={() => handlePremiumFeature('diamond', () => setBatchSize(size))} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${batchSize === size ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{size}</button>))}
+                                {batchSizes.map(size => ( <button key={size} type="button" onClick={() => handlePremiumFeature('diamond', () => setBatchSize(size))} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${batchSize === size ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{size}</button>))}
                             </div>
                         </div>
                         <div>
@@ -352,7 +352,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                                 <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Aspect Ratio <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                             </Tooltip>
                             <div className="grid grid-cols-3 gap-2">
-                                {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
+                                {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
                             </div>
                         </div>
                     </div>
@@ -360,20 +360,20 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                          <Tooltip text="Guide the AI to act as a specialist for higher quality, more specific results.">
                              <label htmlFor="persona" className="flex items-center text-sm font-medium text-gray-300 mb-2"><SparklesIcon className="w-4 h-4 mr-2"/>AI Persona <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                          </Tooltip>
-                        <select id="persona" value={persona} onChange={(e) => handlePremiumFeature(personas.find(p => p.id === e.target.value)!.premium as SubscriptionTier, () => setPersona(e.target.value as AIPersona))} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                        <select id="persona" value={persona} onChange={(e) => handlePremiumFeature(personas.find(p => p.id === e.target.value)!.premium as SubscriptionTier, () => setPersona(e.target.value as AIPersona))} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                             {personas.map(p => <option key={p.id} value={p.id}>{p.label}{p.premium !== 'free' ? ` (${p.premium.charAt(0).toUpperCase() + p.premium.slice(1)})` : ''}</option>)}
                         </select>
                       </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="language" className="flex items-center text-sm font-medium text-gray-300 mb-2"><LanguageIcon className="w-4 h-4 mr-2"/>Language</label>
-                        <select id="language" value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                        <select id="language" value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                             {languages.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
                         </select>
                       </div>
                       <div>
                         <label htmlFor="style" className="block text-sm font-medium text-gray-300 mb-2">Style</label>
-                        <select id="style" value={style} onChange={(e) => setStyle(e.target.value as ImageStyle)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                        <select id="style" value={style} onChange={(e) => setStyle(e.target.value as ImageStyle)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                           {imageStyles.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                         </select>
                       </div>
@@ -383,24 +383,24 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ setToast, onSaveToLibrar
                             <label htmlFor="style-intensity" className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Style Intensity (Golden ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                          </Tooltip>
                         <div className="grid grid-cols-3 gap-2">
-                          {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('golden', () => setStyleIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${styleIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{i.label}</button>)}
+                          {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('golden', () => setStyleIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${styleIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{i.label}</button>)}
                         </div>
                     </div>
                     <div>
                       <label htmlFor="negative-prompt" className="block text-sm font-medium text-gray-300 mb-2">Negative Prompt</label>
-                      <textarea id="negative-prompt" rows={2} value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., blurry, low quality, text, watermark" className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" />
+                      <textarea id="negative-prompt" rows={2} value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., blurry, low quality, text, watermark" className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition placeholder-gray-500" />
                        <Tooltip text="Control how strongly the AI should avoid the negative prompt concepts.">
                           <label htmlFor="negative-intensity" className="block text-sm font-medium text-gray-300 my-2 flex items-center">Negative Intensity (Diamond ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                        </Tooltip>
                       <div className="grid grid-cols-3 gap-2">
-                          {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('diamond', () => setNegativeIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${negativeIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{i.label}</button>)}
+                          {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('diamond', () => setNegativeIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${negativeIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{i.label}</button>)}
                       </div>
                     </div>
                     <div>
                         <Tooltip text="Use the same number to get consistent results for the same prompt, perfect for creating characters.">
                              <label htmlFor="seed" className="flex items-center text-sm font-medium text-gray-300 mb-2"><CubeTransparentIcon className="w-4 h-4 mr-2"/>Seed (Diamond ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                         </Tooltip>
-                        <input type="number" id="seed" value={seed} onChange={(e) => handlePremiumFeature('diamond', () => setSeed(e.target.value))} placeholder="Enter a number for reproducible results" className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" disabled={tierLevels[subscriptionTier] < tierLevels['diamond']}/>
+                        <input type="number" id="seed" value={seed} onChange={(e) => handlePremiumFeature('diamond', () => setSeed(e.target.value))} placeholder="Enter a number for reproducible results" className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition placeholder-gray-500" disabled={tierLevels[subscriptionTier] < tierLevels['diamond']}/>
                     </div>
                   </div>
                 )}

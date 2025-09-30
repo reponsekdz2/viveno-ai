@@ -239,3 +239,10 @@ export const SoundWaveIcon: React.FC<{className?: string}> = ({ className = 'w-6
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h-.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125H8.25m.375 0v-.625c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125v.625m-3.375 0V15c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125V11.25m-3.375 0h.008v.008h-.008V11.25zm5.625 0h-.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h.375m.375 0v-.625c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125v.625m-3.375 0V15c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125V11.25m-3.375 0h.008v.008h-.008V11.25z" />
     </svg>
 );
+
+export const TrophyIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9 9 0 119 0zM16.5 18.75a9 9 0 00-9 0m9 0h.008v.008h-.008v-.008zm-9 0h-.008v.008h.008v-.008zM12 15.75a3 3 0 100-6 3 3 0 000 6z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);

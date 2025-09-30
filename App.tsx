@@ -9,7 +9,15 @@ import { Profile } from './components/Profile';
 import { Settings } from './components/Settings';
 import { Premium } from './components/Premium';
 import { Toast } from './components/Toast';
-import type { GenerationMode, LibraryItem, SubscriptionTier, Toast as ToastType, GenerationSettings } from './types';
+import type { GenerationMode, LibraryItem, SubscriptionTier, Toast as ToastType, GenerationSettings, AppSettings, Theme, NotificationSettings } from './types';
+
+const defaultSettings: AppSettings = {
+  theme: 'studio-dark',
+  notifications: {
+    generationComplete: true,
+    promotions: true
+  }
+}
 
 const App: React.FC = () => {
   const [activeMode, setActiveMode] = useState<GenerationMode>('IMAGE');
@@ -17,7 +25,8 @@ const App: React.FC = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [toasts, setToasts] = useState<ToastType[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  
   useEffect(() => {
     try {
       const storedLibrary = localStorage.getItem('creative-suite-library');
@@ -26,6 +35,11 @@ const App: React.FC = () => {
       const storedTier = localStorage.getItem('creative-suite-tier');
       if (storedTier && ['free', 'silver', 'golden', 'diamond'].includes(JSON.parse(storedTier))) {
          setSubscriptionTier(JSON.parse(storedTier));
+      }
+      
+      const storedSettings = localStorage.getItem('creative-suite-settings');
+      if (storedSettings) {
+        setSettings(JSON.parse(storedSettings));
       }
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -47,6 +61,16 @@ const App: React.FC = () => {
       console.error("Failed to save subscription tier to localStorage", error);
     }
   }, [subscriptionTier]);
+  
+  useEffect(() => {
+    try {
+      localStorage.setItem('creative-suite-settings', JSON.stringify(settings));
+      // Apply theme class to body or root element
+      document.body.className = `bg-black text-gray-300 theme-${settings.theme}`;
+    } catch (error) {
+      console.error("Failed to save settings to localStorage", error);
+    }
+  }, [settings]);
 
   const addToast = useCallback((message: string, type: ToastType['type'] = 'info') => {
     const id = Date.now().toString() + Math.random();
@@ -64,8 +88,10 @@ const App: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
     setLibraryItems(prev => [newItem, ...prev]);
-    addToast('Saved to Library!', 'success');
-  }, [addToast]);
+    if (settings.notifications.generationComplete) {
+      addToast('Saved to Library!', 'success');
+    }
+  }, [addToast, settings.notifications.generationComplete]);
   
   const handleSetSubscriptionTier = (tier: SubscriptionTier) => {
     setSubscriptionTier(tier);
@@ -91,9 +117,9 @@ const App: React.FC = () => {
       case 'LIBRARY':
         return <Library items={libraryItems} setItems={setLibraryItems} setToast={addToast} />;
       case 'PROFILE':
-        return <Profile subscriptionTier={subscriptionTier} />;
+        return <Profile subscriptionTier={subscriptionTier} libraryItems={libraryItems} />;
       case 'SETTINGS':
-        return <Settings setLibraryItems={setLibraryItems} setToast={addToast} />;
+        return <Settings settings={settings} setSettings={setSettings} setLibraryItems={setLibraryItems} setToast={addToast} />;
       case 'PREMIUM':
         return <Premium currentTier={subscriptionTier} onSubscribe={handleSetSubscriptionTier} />;
       default:
@@ -102,9 +128,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-black text-gray-300">
+    <div className={`flex h-screen bg-black text-gray-300 theme-${settings.theme}`}>
       <Sidebar activeMode={activeMode} setActiveMode={setActiveMode} />
-      <main key={activeMode} className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative bg-gray-950/40 animate-fade-in">
+      <main key={activeMode} className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative bg-gray-950/40 animate-fade-in-down">
         {renderContent()}
       </main>
       
@@ -114,12 +140,12 @@ const App: React.FC = () => {
 
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[99] modal-fade-in" onClick={() => setShowUpgradeModal(false)}>
-            <div className="bg-gradient-panel border border-red-500/50 rounded-lg p-8 max-w-sm text-center modal-content-in" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-panel border border-[rgb(var(--accent-color))]/50 rounded-lg p-8 max-w-sm text-center modal-content-in" onClick={e => e.stopPropagation()}>
                 <h3 className="text-2xl font-bold text-white mb-2">Upgrade Required</h3>
                 <p className="text-gray-400 mb-6">This is a premium feature. Please upgrade your plan to unlock this and more powerful capabilities.</p>
                 <button 
                     onClick={() => { setShowUpgradeModal(false); setActiveMode('PREMIUM'); }}
-                    className="w-full bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 ease-in-out hover:bg-red-700 interactive-glow-button"
+                    className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 ease-in-out interactive-glow-button"
                 >
                     View Premium Plans
                 </button>

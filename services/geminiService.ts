@@ -166,32 +166,65 @@ export const transformImage = async (prompt: string, image: { data: string; mime
     throw new Error("Image transformation failed or returned no image.");
 };
 
+const handleApiError = (error: any) => {
+    let errorMessage = 'An unknown error occurred during generation.';
+    if (error instanceof Error) {
+        errorMessage = error.message;
+        // Check for specific quota error messages
+        if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('quota exceeded')) {
+            return new Error('API quota exceeded. Please check your usage or try again later.');
+        }
+    }
+    // Attempt to parse if it's a JSON error response from fetch
+    try {
+        const errJson = JSON.parse(errorMessage);
+        if (errJson.error?.status === 'RESOURCE_EXHAUSTED') {
+            return new Error('API quota exceeded. Please check your usage or try again later.');
+        }
+        if (errJson.error?.message) {
+             return new Error(errJson.error.message);
+        }
+    } catch (e) {
+        // Not a JSON error, proceed with the original message
+    }
+
+    return new Error(errorMessage);
+};
+
+
 const generateVideoInternal = async (prompt: string, image?: { imageBytes: string; mimeType: string }): Promise<string> => {
-    let operation = await ai.models.generateVideos({
-        model: 'veo-2.0-generate-001',
-        prompt: prompt,
-        image,
-        config: {
-            numberOfVideos: 1,
-        },
-    });
+    try {
+        let operation = await ai.models.generateVideos({
+            model: 'veo-2.0-generate-001',
+            prompt: prompt,
+            image,
+            config: {
+                numberOfVideos: 1,
+            },
+        });
 
-    while (!operation.done) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        operation = await ai.operations.getVideosOperation({ operation });
-    }
+        while (!operation.done) {
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            operation = await ai.operations.getVideosOperation({ operation });
+        }
 
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) {
-        throw new Error("Video generation failed or did not return a valid link.");
+        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+        if (!downloadLink) {
+            throw new Error("Video generation failed or did not return a valid link.");
+        }
+        
+        const videoResponse = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+        if (!videoResponse.ok) {
+            if (videoResponse.status === 429) {
+                 throw new Error("Lifetime quota exceeded.");
+            }
+            throw new Error(`Failed to download the generated video. Status: ${videoResponse.status}`);
+        }
+        const videoBlob = await videoResponse.blob();
+        return URL.createObjectURL(videoBlob);
+    } catch (error) {
+        throw handleApiError(error);
     }
-    
-    const videoResponse = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-    if (!videoResponse.ok) {
-        throw new Error("Failed to download the generated video.");
-    }
-    const videoBlob = await videoResponse.blob();
-    return URL.createObjectURL(videoBlob);
 }
 
 export const generateVideo = async (prompt: string, image?: { imageBytes: string; mimeType: string }, style: VideoStyle = 'none', negativePrompt: string = '', duration: VideoDuration = 'short', cameraMovement: CameraMovement = 'none', quality: VideoQuality = 'standard', language: Language = 'english', framing: VideoFraming = 'none', persona: AIPersona = 'none', loop: boolean = false, aspectRatio: AspectRatio = '1:1', fps: VideoFPS = 24, motionIntensity: Intensity = 'balanced', audioMood: AudioMood = 'none'): Promise<string> => {

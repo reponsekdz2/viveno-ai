@@ -409,7 +409,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                           <div className="flex flex-col h-full">
                             <div className="flex-grow flex flex-col items-center justify-center p-4 relative bg-black/20">
                                 <canvas ref={waveformCanvasRef} width="600" height="150" className="absolute inset-0 w-full h-full opacity-50"></canvas>
-                                <button onClick={status === 'idle' ? startRecording : stopRecording} disabled={status === 'connecting' || status === 'stopping'} className={`z-10 relative flex items-center justify-center w-24 h-24 rounded-full transition-all duration-300 ease-in-out group ${ status === 'recording' ? 'bg-red-600' : 'bg-gray-800 hover:bg-gray-700' } disabled:bg-gray-900 disabled:cursor-not-allowed interactive-glow-button`}>
+                                <button onClick={status === 'idle' ? startRecording : stopRecording} disabled={status === 'connecting' || status === 'stopping'} className={`z-10 relative flex items-center justify-center w-24 h-24 rounded-full transition-all duration-300 ease-in-out group ${ status === 'recording' ? 'bg-red-600' : 'bg-gray-900/70 hover:bg-gray-800' } disabled:bg-gray-900 disabled:cursor-not-allowed interactive-glow-button`}>
                                     {status === 'recording' && <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></span>}
                                     {status === 'recording' ? <StopCircleIcon className="w-12 h-12 text-white" /> : <MicrophoneIcon className="w-12 h-12 text-white" />}
                                 </button>
@@ -420,7 +420,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                                     <h3 className="text-lg font-semibold text-white">Live Transcript</h3>
                                     <button onClick={() => handleCopy((finalTranscript + transcript).trim())} className="text-gray-400 hover:text-white transition p-1 rounded-full">{copied ? <CheckIcon className="text-green-500"/> : <DocumentDuplicateIcon />}</button>
                                 </div>
-                                <div className="bg-gray-800 rounded-lg p-3 flex-grow overflow-y-auto text-gray-300 whitespace-pre-wrap">
+                                <div className="bg-gray-900/70 rounded-lg p-3 flex-grow overflow-y-auto text-gray-300 whitespace-pre-wrap">
                                     {finalTranscript}{transcript}{status === 'recording' && <span className="inline-block w-2 h-4 bg-red-500 animate-pulse ml-1"></span>}
                                 </div>
                                 {sttError && <p className="mt-2 text-sm text-red-400">{sttError}</p>}
@@ -439,7 +439,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                                </div>
                                 <div className="bg-gray-950/50 border-t border-[var(--border-color)] p-4 rounded-b-lg flex-shrink-0 h-1/2 flex flex-col">
                                     <div className="flex justify-between items-center mb-2"><h3 className="text-lg font-semibold text-white">File Transcript</h3> <button onClick={() => handleCopy(finalTranscript)} className="text-gray-400 hover:text-white transition p-1 rounded-full">{copied ? <CheckIcon className="text-green-500"/> : <DocumentDuplicateIcon />}</button></div>
-                                    <div className="bg-gray-800 rounded-lg p-3 flex-grow overflow-y-auto"><p className="text-gray-300 whitespace-pre-wrap">{isTranscribingFile ? <div className="flex items-center justify-center h-full"><Spinner /></div> : finalTranscript || <span className="text-gray-500">Upload a file to begin transcription...</span>}</p></div>
+                                    <div className="bg-gray-900/70 rounded-lg p-3 flex-grow overflow-y-auto"><p className="text-gray-300 whitespace-pre-wrap">{isTranscribingFile ? <div className="flex items-center justify-center h-full"><Spinner /></div> : finalTranscript || <span className="text-gray-500">Upload a file to begin transcription...</span>}</p></div>
                                     {sttError && <p className="mt-2 text-sm text-red-400">{sttError}</p>}
                                 </div>
                              </div>
@@ -450,11 +450,11 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                         <h3 className="text-xl font-semibold text-white">Text-to-Speech</h3>
                         <div>
                             <label htmlFor="tts-text" className="block text-sm font-medium text-gray-300 mb-2">Your Text</label>
-                            <textarea id="tts-text" rows={6} value={ttsText} onChange={(e) => setTtsText(e.target.value)} placeholder="Enter text to convert to speech..." className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" />
+                            <textarea id="tts-text" rows={6} value={ttsText} onChange={(e) => setTtsText(e.target.value)} placeholder="Enter text to convert to speech..." className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition placeholder-gray-500" />
                         </div>
                         <div>
                             <label htmlFor="voice" className="block text-sm font-medium text-gray-300 mb-2">System Voice</label>
-                             <select id="voice" value={selectedVoiceURI} onChange={(e) => setSelectedVoiceURI(e.target.value)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                             <select id="voice" value={selectedVoiceURI} onChange={(e) => setSelectedVoiceURI(e.target.value)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                                 <optgroup label="English">
                                     {filteredVoices('en').map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
                                 </optgroup>
@@ -487,12 +487,12 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                         <h3 className="text-xl font-semibold text-white">AI Sound FX Generator <span className="text-sm font-normal text-yellow-400">(Golden ✨)</span></h3>
                         <div>
                             <label htmlFor="fx-prompt" className="block text-sm font-medium text-gray-300 mb-2">Describe the sound</label>
-                            <textarea id="fx-prompt" rows={4} value={fxPrompt} onChange={(e) => setFxPrompt(e.target.value)} placeholder="e.g., A heavy wooden door creaking open in a castle..." className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" />
+                            <textarea id="fx-prompt" rows={4} value={fxPrompt} onChange={(e) => setFxPrompt(e.target.value)} placeholder="e.g., A heavy wooden door creaking open in a castle..." className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition placeholder-gray-500" />
                         </div>
                         <div>
                            <label className="block text-sm font-medium text-gray-300 mb-2">Style Modifier</label>
                            <div className="grid grid-cols-4 gap-2">
-                                {fxStyles.map(s => <button key={s.id} onClick={() => setFxStyle(s.id)} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${fxStyle === s.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{s.label}</button>)}
+                                {fxStyles.map(s => <button key={s.id} onClick={() => setFxStyle(s.id)} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${fxStyle === s.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{s.label}</button>)}
                            </div>
                         </div>
                         <div className="flex-grow flex flex-col items-center justify-center">
@@ -533,7 +533,7 @@ export const AudioTools: React.FC<AudioToolsProps> = ({ setToast, subscriptionTi
                                         <p className="text-sm font-medium text-gray-300">Enhancement Mode:</p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                             {enhancementModes.map(mode => (
-                                                <button key={mode.id} onClick={() => setEnhancementMode(mode.id)} className={`p-3 text-left rounded-lg transition border-2 ${enhancementMode === mode.id ? 'bg-red-900/50 border-red-500' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'}`}>
+                                                <button key={mode.id} onClick={() => setEnhancementMode(mode.id)} className={`p-3 text-left rounded-lg transition border-2 ${enhancementMode === mode.id ? 'bg-red-900/50 border-red-500' : 'bg-gray-900/70 border-gray-700 hover:border-gray-600'}`}>
                                                     <div className="flex items-center"><span className="mr-2">{mode.icon}</span>{mode.label}</div>
                                                     <p className="text-xs text-gray-400 mt-1">{mode.description}</p>
                                                 </button>

@@ -69,3 +69,15 @@ export interface Toast {
   message: string;
   type: 'success' | 'error' | 'info';
 }
+
+export type Theme = 'studio-dark' | 'crimson' | 'cyberpunk';
+
+export interface NotificationSettings {
+    generationComplete: boolean;
+    promotions: boolean;
+}
+
+export interface AppSettings {
+    theme: Theme;
+    notifications: NotificationSettings;
+}

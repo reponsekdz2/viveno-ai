@@ -89,7 +89,7 @@ export const Premium: React.FC<PremiumProps> = ({ currentTier, onSubscribe }) =>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl">
                 {tiers.map((tier) => (
-                    <div key={tier.id} className={`bg-gradient-panel rounded-xl border-2 ${currentTier === tier.id ? tier.color : 'border-[var(--border-color)]'} p-6 flex flex-col transition-all duration-300 ${tier.id !== 'free' ? 'premium-card-glow' : ''} ${currentTier === tier.id ? 'transform scale-105 shadow-2xl' : 'hover:scale-102'}`}>
+                    <div key={tier.id} className={`bg-gradient-panel rounded-xl border-2 ${currentTier === tier.id ? `${tier.color} shadow-2xl shadow-red-500/20` : 'border-[var(--border-color)]'} p-6 flex flex-col transition-all duration-300 ${tier.id !== 'free' ? 'premium-card-glow' : ''} ${currentTier === tier.id ? 'transform scale-105' : 'hover:scale-102'}`}>
                         <h3 className={`text-2xl font-bold ${tier.textColor}`}>{tier.name}</h3>
                         <p className="text-4xl font-bold text-white my-4">{tier.price}<span className="text-lg font-medium text-gray-400">{tier.id !== 'free' ? '/mo' : ''}</span></p>
                         <p className="text-gray-400 flex-grow mb-6">{tier.description}</p>

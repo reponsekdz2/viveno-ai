@@ -22,12 +22,13 @@ interface SidebarProps {
 const NavLink: React.FC<{ link: SidebarLink; isActive: boolean; onClick: () => void }> = ({ link, isActive, onClick }) => (
     <button
       onClick={onClick}
-      className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+      className={`relative flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 group ${
         isActive
-          ? 'bg-red-600 text-white shadow-lg shadow-red-500/20'
+          ? 'bg-red-600/90 text-white shadow-lg shadow-red-500/20'
           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
       }`}
     >
+      <span className={`absolute left-0 top-0 h-full w-1 rounded-r-full bg-red-500 transition-transform duration-300 ${isActive ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-50'}`}></span>
       <span className="mr-3">{link.icon}</span>
       {link.label}
     </button>

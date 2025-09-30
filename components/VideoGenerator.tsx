@@ -255,7 +255,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
           <div>
             <label htmlFor="prompt" className="block text-sm font-medium text-gray-300 mb-2">Prompt</label>
             <div className="relative">
-              <textarea id="prompt" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="A high-speed chase scene with a sports car..." className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition pr-10"/>
+              <textarea id="prompt" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="A high-speed chase scene with a sports car..." className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition pr-10 placeholder-gray-500"/>
             </div>
              <div className="flex justify-between items-center text-xs mt-1">
                  <div className="relative">
@@ -278,7 +278,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                   <Tooltip text="Guide the AI to act as a specialist for higher quality, more specific results.">
                     <label htmlFor="persona" className="flex items-center text-sm font-medium text-gray-300 mb-2"><SparklesIcon className="w-4 h-4 mr-2"/>AI Persona <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                   </Tooltip>
-                  <select id="persona" value={persona} onChange={(e) => handlePremiumFeature(personas.find(p => p.id === e.target.value)!.premium as SubscriptionTier, () => setPersona(e.target.value as AIPersona))} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                  <select id="persona" value={persona} onChange={(e) => handlePremiumFeature(personas.find(p => p.id === e.target.value)!.premium as SubscriptionTier, () => setPersona(e.target.value as AIPersona))} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                       {personas.map(p => <option key={p.id} value={p.id}>{p.label}{p.premium !== 'free' ? ` (${p.premium.charAt(0).toUpperCase() + p.premium.slice(1)})` : ''}</option>)}
                   </select>
                 </div>
@@ -288,7 +288,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                            <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Aspect Ratio <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                         </Tooltip>
                         <div className="grid grid-cols-3 gap-2">
-                            {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
+                            {aspectRatios.map(ratio => ( <button key={ratio.id} type="button" onClick={() => ratio.premium ? handlePremiumFeature('golden', () => setAspectRatio(ratio.id)) : setAspectRatio(ratio.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${aspectRatio === ratio.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{ratio.id}{ratio.premium ? ' ✨' : ''}</button>))}
                         </div>
                     </div>
                      <div>
@@ -296,14 +296,14 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                            <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Frame Rate (FPS) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                         </Tooltip>
                         <div className="grid grid-cols-3 gap-2">
-                            {videoFPSs.map(f => ( <button key={f.id} type="button" onClick={() => f.premium ? handlePremiumFeature('golden', () => setFps(f.id)) : setFps(f.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${fps === f.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{f.label}{f.premium ? ' ✨' : ''}</button>))}
+                            {videoFPSs.map(f => ( <button key={f.id} type="button" onClick={() => f.premium ? handlePremiumFeature('golden', () => setFps(f.id)) : setFps(f.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${fps === f.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{f.label}{f.premium ? ' ✨' : ''}</button>))}
                         </div>
                     </div>
                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                       <label htmlFor="language" className="flex items-center text-sm font-medium text-gray-300 mb-2"><LanguageIcon className="w-4 h-4 mr-2"/>Language</label>
-                      <select id="language" value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                      <select id="language" value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                           {languages.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
                       </select>
                   </div>
@@ -312,7 +312,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                       <label className="flex items-center text-sm font-medium text-gray-300 mb-2"><CheckBadgeIcon className="w-4 h-4 mr-2" />Quality <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                     </Tooltip>
                     <div className="grid grid-cols-2 gap-2">
-                        {videoQualities.map(q => (<button key={q.id} type="button" onClick={() => q.premium ? handlePremiumFeature('golden', () => setQuality(q.id)) : setQuality(q.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${quality === q.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{q.label}{q.premium ? ' ✨' : ''}</button>))}
+                        {videoQualities.map(q => (<button key={q.id} type="button" onClick={() => q.premium ? handlePremiumFeature('golden', () => setQuality(q.id)) : setQuality(q.id)} className={`p-2 text-xs rounded-md font-semibold transition flex items-center justify-center ${quality === q.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{q.label}{q.premium ? ' ✨' : ''}</button>))}
                     </div>
                   </div>
                 </div>
@@ -321,21 +321,21 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                     <label className="flex items-center text-sm font-medium text-gray-300 mb-2"><ClockIcon className="w-4 h-4 mr-2"/>Duration Goal <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                   </Tooltip>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {videoDurations.map(d => (<button key={d.id} type="button" onClick={() => handlePremiumFeature(d.premium as SubscriptionTier, ()=>setDuration(d.id))} className={`p-2 text-xs rounded-md font-semibold transition ${duration === d.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{d.label}{d.premium !== 'free' ? ' ✨' : ''}</button>))}
+                      {videoDurations.map(d => (<button key={d.id} type="button" onClick={() => handlePremiumFeature(d.premium as SubscriptionTier, ()=>setDuration(d.id))} className={`p-2 text-xs rounded-md font-semibold transition ${duration === d.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{d.label}{d.premium !== 'free' ? ' ✨' : ''}</button>))}
                   </div>
                 </div>
                  <div>
                     <Tooltip text="Generate an AI soundtrack to match the mood of your video.">
                         <label htmlFor="audio-mood" className="flex items-center text-sm font-medium text-gray-300 mb-2"><MusicalNoteIcon className="w-4 h-4 mr-2"/>Audio Mood (Golden ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                     </Tooltip>
-                     <select id="audio-mood" value={audioMood} onChange={(e) => handlePremiumFeature('golden', ()=>setAudioMood(e.target.value as AudioMood))} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                     <select id="audio-mood" value={audioMood} onChange={(e) => handlePremiumFeature('golden', ()=>setAudioMood(e.target.value as AudioMood))} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                         {audioMoods.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="camera-movement" className="block text-sm font-medium text-gray-300 mb-2">Camera Movement</label>
-                    <select id="camera-movement" value={cameraMovement} onChange={(e) => setCameraMovement(e.target.value as CameraMovement)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                    <select id="camera-movement" value={cameraMovement} onChange={(e) => setCameraMovement(e.target.value as CameraMovement)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                         {cameraMovements.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     </select>
                   </div>
@@ -344,31 +344,31 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ setToast, onSave
                         <label htmlFor="motion-intensity" className="block text-sm font-medium text-gray-300 mb-2 flex items-center">Motion Intensity (Golden ✨) <QuestionMarkCircleIcon className="ml-1 text-gray-500"/></label>
                     </Tooltip>
                     <div className="grid grid-cols-3 gap-2">
-                        {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('golden', () => setMotionIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${motionIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>{i.label}</button>)}
+                        {intensities.map(i => <button type="button" key={i.id} onClick={() => handlePremiumFeature('golden', () => setMotionIntensity(i.id))} className={`p-2 text-xs rounded-md font-semibold capitalize transition ${motionIntensity === i.id ? 'bg-red-600 text-white' : 'bg-gray-900/70 text-gray-300 hover:bg-gray-800'}`}>{i.label}</button>)}
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="video-framing" className="flex items-center text-sm font-medium text-gray-300 mb-2"><FrameIcon className="w-4 h-4 mr-2" />Framing</label>
-                    <select id="video-framing" value={framing} onChange={(e) => setFraming(e.target.value as VideoFraming)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                    <select id="video-framing" value={framing} onChange={(e) => setFraming(e.target.value as VideoFraming)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                         {videoFramings.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
                     </select>
                   </div>
                   <div>
                     <label htmlFor="video-style" className="block text-sm font-medium text-gray-300 mb-2">Style</label>
-                    <select id="video-style" value={style} onChange={(e) => setStyle(e.target.value as VideoStyle)} className="w-full bg-gray-800 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
+                    <select id="video-style" value={style} onChange={(e) => setStyle(e.target.value as VideoStyle)} className="w-full bg-gray-900/70 text-gray-200 rounded-md p-2 focus:ring-2 focus:ring-red-500 border border-gray-700 transition">
                         {videoStyles.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
                   <label htmlFor="video-negative-prompt" className="block text-sm font-medium text-gray-300 mb-2">Negative Prompt</label>
-                  <textarea id="video-negative-prompt" rows={2} value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., watermark, grainy, shaky camera" className="w-full bg-gray-800 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition" />
+                  <textarea id="video-negative-prompt" rows={2} value={negativePrompt} onChange={(e) => setNegativePrompt(e.target.value)} placeholder="e.g., watermark, grainy, shaky camera" className="w-full bg-gray-900/70 text-gray-200 rounded-md p-3 focus:ring-2 focus:ring-red-500 border border-gray-700 transition placeholder-gray-500" />
                 </div>
                  <div>
                     <Tooltip text="Creates a seamless loop, perfect for GIFs and backgrounds.">
-                      <button type="button" onClick={() => handlePremiumFeature('diamond', () => setLoopVideo(!loopVideo))} className={`w-full flex items-center justify-between text-left p-2 rounded-lg transition-colors ${loopVideo ? 'bg-red-900/50' : 'bg-gray-800'}`}>
+                      <button type="button" onClick={() => handlePremiumFeature('diamond', () => setLoopVideo(!loopVideo))} className={`w-full flex items-center justify-between text-left p-2 rounded-lg transition-colors ${loopVideo ? 'bg-red-900/50' : 'bg-gray-900/70'}`}>
                           <span className="flex items-center font-medium"><ArrowPathRoundedSquareIcon className="mr-2" />Loop Video (Diamond ✨)</span>
                           <div className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${loopVideo ? 'bg-red-600' : 'bg-gray-600'}`}>
                               <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform ${loopVideo ? 'translate-x-5' : ''}`}></div>
